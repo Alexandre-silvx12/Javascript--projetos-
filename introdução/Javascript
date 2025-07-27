@@ -10,6 +10,20 @@ Então quando você acessa a internet (Instagram, site do google,etc...)
 noomento em que você usa um dispositivo ele é um cliente
 que precisa de dados de um servidor ou ate mais de um servidor.
 
+  🖥️   📱 (cliente)
+    Chrome (navegador:URL)
+     ☁️ (infraestrutura da internet)
+   servidor (possui pastas e dentro das pastas estão os arquivos)
 
-
+           Explicação 
+Quando você entra no navegador e dijita o url 
+e dá enter, esse url vai pra nuvem que vai indicar
+pra qual servidor o url vai ser enviado.
+Dentro desse servidor possui pastas e dentro delas possui 
+arquivos. 
+Esses arquivos são oq vc procura, na hora que você solocita 
+o servidor ele te envia uma copia do arquivo que é
+enviado diretamente para o cliente (você).
+Obs: O Javascript funciona tanto clinte como no servidor 
+mas ele tem mais funcionalidade no cliente.
 
