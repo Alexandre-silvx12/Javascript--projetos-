@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jogo da Memória</title>
+<style>
+  body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#121216;
+    color: #fff;
+    margin:0;
+    padding:20px;
+  }
+  h1{ margin:8px 0 16px; }
+  #game-info{ margin:8px 0; font-weight:600; }
+  #game-board{
+    display:grid;
+    gap:12px;
+    justify-content:center;
+    margin-top:18px;
+  }
+  .card{
+    width:80px;
+    height:80px;
+    background:#007BFF;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:26px;
+    color:transparent;
+    cursor:pointer;
+    user-select:none;
+  }
+  .card.revealed{ color:white; }
+  button{
+    padding:10px 18px;
+    background:gray;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+    margin-top:14px;
+  }
+  h2{ margin:12px 0 8px; color:white; }
+</style>
+</head>
+<body>
+
+  <h1>Jogo da Memória</h1>
+
+  <div id="game-info"></div>
+
+  <div id="game-board"></div>
+
+  <div id="controls">
+    <button id="start-btn">Começar o jogo</button>
+  </div>
+
+<script>
+const LEVELS = {1:6, 2:8, 3:10, 4:12, 5:14};
+const MAX_ATTEMPTS = 15;
+
+let currentLevel = 1;
+let attemptsRemaining = MAX_ATTEMPTS;
+let flippedCards = [];
+let matchedCards = [];
+let lock = false;
+let gameStarted = false;
+let totalCardsThisLevel = 0;
+
+const gameInfo = document.getElementById('game-info');
+const gameBoard = document.getElementById('game-board');
+const controls = document.getElementById('controls');
+const startBtn = document.getElementById('start-btn');
+
+startBtn.addEventListener('click', startGame);
+
+function updateInfo(){
+  gameInfo.textContent = `Nível: ${currentLevel} | Tentativas: ${attemptsRemaining}`;
+}
+
+function startGame(){
+  gameStarted = true;
+  lock = false;
+  attemptsRemaining = MAX_ATTEMPTS;
+  flippedCards = [];
+  matchedCards = [];
+  controls.innerHTML = '';
+  updateInfo();
+  createBoard();
+}
+
+function createBoard(){
+  const numCards = LEVELS[currentLevel];
+  totalCardsThisLevel = numCards;
+  const half = numCards / 2;
+  let values = [];
+  for(let i=1;i<=half;i++){ values.push(i); values.push(i); }
+  values.sort(()=>Math.random()-0.5);
+
+  gameBoard.innerHTML = '';
+  const cols = Math.ceil(Math.sqrt(numCards));
+  gameBoard.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+
+  values.forEach((val, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.value = String(val);
+    card.dataset.index = String(idx);
+    card.addEventListener('click', () => onCardClick(card));
+    gameBoard.appendChild(card);
+  });
+
+  updateInfo();
+}
+
+function onCardClick(card){
+  if(!gameStarted) return;
+  if(lock) return;
+  if(card.classList.contains('revealed')) return;
+
+  card.classList.add('revealed');
+  card.textContent = card.dataset.value;
+  flippedCards.push(card);
+
+  if(flippedCards.length === 2){
+    const [a,b] = flippedCards;
+
+    if(a.dataset.value === b.dataset.value){
+      matchedCards.push(a, b);
+      flippedCards = [];
+      updateInfo();
+      if(matchedCards.length === totalCardsThisLevel){
+        gameStarted = false;
+        setTimeout(() => winLevel(), 300);
+      }
+    } else {
+      attemptsRemaining = Math.max(0, attemptsRemaining - 1);
+      updateInfo();
+
+      lock = true;
+      setTimeout(() => {
+        flippedCards.forEach(c => {
+          c.classList.remove('revealed');
+          c.textContent = '';
+        });
+        flippedCards = [];
+        lock = false;
+
+        if(attemptsRemaining <= 0){
+          gameStarted = false;
+          loseGame();
+        }
+      }, 800);
+    }
+  }
+}
+
+function winLevel(){
+  gameStarted = false;
+  if(currentLevel < 5){
+    controls.innerHTML = `<h2>Você venceu!</h2>
+      <button onclick="nextLevel()">Próximo nível</button>`;
+  } else {
+    controls.innerHTML = `<h2>Você zerou o jogo!</h2>
+      <button onclick="restartGame()">Reiniciar</button>`;
+  }
+}
+
+function loseGame(){
+  attemptsRemaining = 0;
+  updateInfo();
+  controls.innerHTML = `<h2>Você perdeu!</h2>
+    <button onclick="retryLevel()">Tentar de novo</button>`;
+}
+
+function nextLevel(){
+  if(currentLevel < 5) currentLevel++;
+  startGame();
+}
+
+function retryLevel(){
+  startGame();
+}
+
+function restartGame(){
+  currentLevel = 1;
+  startGame();
+}
+</script>
+</body>
+</html>
