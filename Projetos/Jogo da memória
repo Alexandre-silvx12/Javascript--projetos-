@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jogo da Memória Mega Completo</title>
+<style>
+/* ===================== */
+/* Estilo geral           */
+/* ===================== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #121216;
+  color: #fff;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 16px 0;
+}
+
+#game-info {
+  font-weight: 600;
+  margin: 12px 0;
+  font-size: 18px;
+}
+
+#game-board {
+  display: grid;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 18px;
+  background: gray;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 14px;
+}
+
+h2 {
+  margin: 12px 0 8px;
+  color: white;
+}
+
+/* ===================== */
+/* Tela inicial animada   */
+/* ===================== */
+#intro-screen {
+  position: fixed;
+  top: 0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#121216;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  color:white;
+}
+
+#intro-screen h1 {
+  font-size:48px;
+  margin-bottom:20px;
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+#intro-screen p {
+  font-size:20px;
+  margin:8px 0;
+}
+
+#intro-screen button {
+  margin-top:20px;
+  padding:12px 24px;
+  font-size:18px;
+  background:#007BFF;
+}
+
+/* Glow animação */
+@keyframes glow {
+  from { text-shadow: 0 0 5px #fff; }
+  to { text-shadow: 0 0 20px #0ff; }
+}
+
+/* ===================== */
+/* Fundo de estrelas      */
+/* ===================== */
+.stars {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: twinkle linear infinite;
+}
+
+@keyframes twinkle {
+  0% { transform: translateY(0px); opacity: 0.8; }
+  50% { opacity: 0.3; }
+  100% { transform: translateY(800px); opacity: 0.8; }
+}
+
+/* ===================== */
+/* Cartas do jogo         */
+/* ===================== */
+.card {
+  width: 80px;
+  height: 80px;
+  perspective: 1000px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.card-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.card.revealed .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+}
+
+.card-front {
+  background: #007BFF;
+  color: transparent;
+}
+
+.card-back {
+  background: #fff;
+  color: #000;
+  transform: rotateY(180deg);
+}
+
+/* Brilho nas cartas */
+.card-back:hover {
+  box-shadow: 0 0 15px #ff0, 0 0 25px #ff0;
+}
+
+/* ===================== */
+/* Confete               */
+/* ===================== */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: yellow;
+  z-index: 9999;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(600px) rotate(360deg); opacity: 0; }
+}
+
+/* ===================== */
+/* Dicas visuais          */
+/* ===================== */
+#hint-overlay {
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.85);
+  display:flex;
+  flex-wrap: wrap;
+  justify-content:center;
+  align-items:center;
+  z-index:998;
+}
+
+#hint-overlay .hint-card {
+  width:60px;
+  height:60px;
+  margin:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  background:#007BFF;
+  color:white;
+  border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<!-- Tela inicial -->
+<div id="intro-screen">
+  <h1>Jogo da Memória Turbo</h1>
+  <p>Desafie sua memória!</p>
+  <p>Clique nas cartas iguais para vencer cada nível.</p>
+  <p>Começa fácil e vai aumentando!</p>
+  <button id="intro-start-btn">Começar</button>
+</div>
+
+<div id="game-info"></div>
+<div id="game-board"></div>
+<div id="controls"></div>
+<div class="stars" id="stars"></div>
+<div id="hint-overlay" style="display:none;"></div>
+
+<script>
+// ============================
+// Configurações gerais
+// ============================
+const MAX_ATTEMPTS = 25;
+const MAX_LEVEL = 20;
+const ICONS = ["🍎","🍌","🍇","🍉","🍓","🍒","🍍","🥝","🥑","🍑","🥕","🌽","🍄","🥔","🥭","🍋","🍐","🥦","🫐","🥥","🥬","🥯","🍞","🧀","🥩","🍗","🍖","🍤","🍔","🍟","🌭","🥪"];
+let currentLevel = 1;
+let attemptsRemaining = MAX_ATTEMPTS;
+let flippedCards = [];
+let matchedCards = [];
+let lock = false;
+let gameStarted = false;
+let totalCardsThisLevel = 0;
+
+// Elementos DOM
+const introScreen = document.getElementById('intro-screen');
+const introStartBtn = document.getElementById('intro-start-btn');
+const gameInfo = document.getElementById('game-info');
+const gameBoard = document.getElementById('game-board');
+const controls = document.getElementById('controls');
+const starsDiv = document.getElementById('stars');
+const hintOverlay = document.getElementById('hint-overlay');
+
+// Sons
+const audioMatch = new Audio("https://freesound.org/data/previews/341/341695_6241202-lq.mp3");
+const audioWrong = new Audio("https://freesound.org/data/previews/331/331912_3248244-lq.mp3");
+const audioWin = new Audio("https://freesound.org/data/previews/466/466034_5121236-lq.mp3");
+
+// ============================
+// Tela inicial
+// ============================
+introStartBtn.addEventListener('click', ()=>{
+  introScreen.style.display='none';
+  startGame();
+});
+
+// ============================
+// Número de cartas por nível
+// ============================
+function getCardsForLevel(level){ return 15 + (level-1)*5; }
+
+// ============================
+// Atualiza info
+// ============================
+function updateInfo(){
+  gameInfo.textContent=`Nível: ${currentLevel} | Tentativas: ${attemptsRemaining}`;
+}
+
+// ============================
+// Inicia o jogo
+// ============================
+function startGame(){
+  gameStarted=true;
+  lock=false;
+  attemptsRemaining=MAX_ATTEMPTS;
+  flippedCards=[];
+  matchedCards=[];
+  controls.innerHTML='';
+  updateInfo();
+  createBoard();
+  createStars();
+  showHint(); // mostra dicas visuais no início do nível
+}
+
+// ============================
+// Cria tabuleiro
+// ============================
+function createBoard(){
+  const numCards = getCardsForLevel(currentLevel);
+  totalCardsThisLevel=numCards;
+  const half=Math.ceil(numCards/2);
+  let values=[];
+  for(let i=0;i<half;i++){
+    values.push(ICONS[i]);
+    values.push(ICONS[i]);
+  }
+  values.sort(()=>Math.random()-0.5);
+
+  gameBoard.innerHTML='';
+  const cols = Math.ceil(Math.sqrt(numCards));
+  gameBoard.style.gridTemplateColumns=`repeat(${cols},80px)`;
+
+  values.forEach((val,idx)=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.dataset.value=val;
+    card.dataset.index=idx;
+
+    const inner=document.createElement('div');
+    inner.className='card-inner';
+
+    const front=document.createElement('div');
+    front.className='card-front';
+    front.textContent='';
+
+    const back=document.createElement('div');
+    back.className='card-back';
+    back.textContent=val;
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
+    card.addEventListener('click',()=>onCardClick(card));
+    gameBoard.appendChild(card);
+  });
+  updateInfo();
+}
+
+// ============================
+// Clique nas cartas
+// ============================
+function onCardClick(card){
+  if(!gameStarted) return;
+  if(lock) return;
+  if(flippedCards.includes(card)) return;
+
+  card.classList.add('revealed');
+  flippedCards.push(card);
+
+  if(flippedCards.length===2){
+    const [a,b]=flippedCards;
+    if(a.dataset.value===b.dataset.value){
+      matchedCards.push(a,b);
+      audioMatch.play();
+      flippedCards=[];
+      updateInfo();
+      if(matchedCards.length===totalCardsThisLevel){
+        gameStarted=false;
+        confettiBurst();
+        audioWin.play();
+        setTimeout(()=>winLevel(),1000);
+      }
+    }else{
+      attemptsRemaining=Math.max(0,attemptsRemaining-1);
+      audioWrong.play();
+      updateInfo();
+      lock=true;
+      setTimeout(()=>{
+        flippedCards.forEach(c=>c.classList.remove('revealed'));
+        flippedCards=[];
+        lock=false;
+        if(attemptsRemaining<=0){
+          gameStarted=false;
+          loseGame();
+        }
+      },1000);
+    }
+  }
+}
+
+// ============================
+// Vitória do nível
+// ============================
+function winLevel(){
+  if(currentLevel<MAX_LEVEL){
+    controls.innerHTML=`<h2>Você venceu!</h2><button onclick="nextLevel()">Próximo nível</button>`;
+  }else{
+    controls.innerHTML=`<h2>Parabéns! Você zerou o jogo!</h2><button onclick="restartGame()">Reiniciar</button>`;
+  }
+}
+
+// ============================
+// Derrota
+// ============================
+function loseGame(){
+  attemptsRemaining=0;
+  updateInfo();
+  controls.innerHTML=`<h2>Você perdeu!</h2><button onclick="retryLevel()">Tentar de novo</button>`;
+}
+
+// ============================
+// Próximo nível / Reinício
+// ============================
+function nextLevel(){ currentLevel++; startGame(); }
+function retryLevel(){ startGame(); }
+function restartGame(){ currentLevel=1; startGame(); }
+
+// ============================
+// Fundo de estrelas
+// ============================
+function createStars(){
+  starsDiv.innerHTML='';
+  for(let i=0;i<50;i++){
+    const star=document.createElement('div');
+    star.className='star';
+    const size=Math.random()*3+1;
+    star.style.width=size+'px';
+    star.style.height=size+'px';
+    star.style.left=Math.random()*window.innerWidth+'px';
+    star.style.top=Math.random()*window.innerHeight+'px';
+    star.style.animationDuration=(Math.random()*5+3)+'s';
+    starsDiv.appendChild(star);
+  }
+}
+
+// ============================
+// Confete
+// ============================
+function confettiBurst(){
+  for(let i=0;i<100;i++){
+    const confetti=document.createElement('div');
+    confetti.className='confetti-piece';
+    confetti.style.left=Math.random()*window.innerWidth+'px';
+    confetti.style.background=`hsl(${Math.random()*360},100%,50%)`;
+    confetti.style.animationDuration=(Math.random()*2+2)+'s';
+    document.body.appendChild(confetti);
+    setTimeout(()=>confetti.remove(),3000);
+  }
+}
+
+// ============================
+// Dicas visuais
+// ============================
+function showHint(){
+  hintOverlay.innerHTML='';
+  hintOverlay.style.display='flex';
+  const numCards = getCardsForLevel(currentLevel);
+  const half=Math.ceil(numCards/2);
+  let values=[];
+  for(let i=0;i<half;i++){
+    values.push(ICONS[i]);
+    values.push(ICONS[i]);
+  }
+  values.sort(()=>Math.random()-0.5);
+  values.forEach(val=>{
+    const hintCard=document.createElement('div');
+    hintCard.className='hint-card';
+    hintCard.textContent=val;
+    hintOverlay.appendChild(hintCard);
+  });
+  setTimeout(()=>{ hintOverlay.style.display='none'; },2000); // mostra 2s
+}
+</script>
+</body>
+</html>
