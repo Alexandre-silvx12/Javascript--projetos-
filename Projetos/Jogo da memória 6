@@ -58,7 +58,7 @@ h2 { margin:12px 0 8px; color:white; }
 </div>
 
 <script>
-const MAX_ATTEMPTS=25;
+const MAX_ATTEMPTS=15;
 const MAX_LEVEL=4;
 const ICONS=["🍎","🍌","🍇","🍉","🍓","🍒","🍍","🥝","🥑","🍑","🥕","🌽","🍄","🥔","🥭","🍋","🍐","🥦","🫐","🥥","🥬","🥯","🍞","🧀","🥩","🍗","🍖","🍤","🍔","🍟","🌭","🥪"];
 
